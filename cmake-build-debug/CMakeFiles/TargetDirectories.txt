@@ -1,0 +1,3 @@
+/Users/yunicai/Code_file/code/computer_graphic_homework/Raster/cmake-build-debug/CMakeFiles/Raster.dir
+/Users/yunicai/Code_file/code/computer_graphic_homework/Raster/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/yunicai/Code_file/code/computer_graphic_homework/Raster/cmake-build-debug/CMakeFiles/rebuild_cache.dir
