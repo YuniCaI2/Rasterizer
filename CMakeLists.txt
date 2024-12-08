@@ -18,11 +18,11 @@ add_executable(Raster main.cpp
         OBJ_Loader.h
         Shader.cpp
         Shader.h
-        Camera.cpp
-        Camera.h
         rasterizer.cpp
         rasterizer.h
-        Fragment.h)
+        Fragment.h
+        Camera.cpp
+        Camera.h)
 
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})

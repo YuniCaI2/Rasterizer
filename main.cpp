@@ -4,28 +4,40 @@
 #include "Model.h"
 #include "rasterizer.h"
 #include "Shader.h"
+#include "Camera.h"
+#include <chrono>
 #define MY_PI 3.14159265358979323846
 
-Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)
-{
-    Eigen::Matrix4f projection = Eigen::Matrix4f::Identity();//这里必须单位化，否则黑屏
 
-    eye_fov = eye_fov * MY_PI / 180;
-    float fax = 1.0f / (float)tan(eye_fov * 0.5f);
+Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar) {
+    Eigen::Matrix4f projection = Eigen::Matrix4f::Zero();
 
-    Eigen::Matrix4f perspective;
-    perspective << (float)(fax / aspect_ratio),0,0,0,
-                    0,(float)(fax),0,0,
-                    0,0,zFar / (zFar - zNear),0,
-                    0,0,1,-zNear * zFar / (zFar - zNear);
+    // Convert field of view from degrees to radians
+    float fov_rad = eye_fov * M_PI / 180.0f;
+
+    // Calculate the height of the near plane
+    float t = std::tan(fov_rad / 2) * zNear;
+    float b = -t;
+
+    // Calculate the width of the near plane
+    float r = t * aspect_ratio;
+    float l = -r;
+
+    // Define the projection matrix components
+    projection(0, 0) = 2 * zNear / (r - l);
+    projection(1, 1) = 2 * zNear / (t - b);
+    projection(0, 2) = (r + l) / (r - l);
+    projection(1, 2) = (t + b) / (t - b);
+    projection(2, 2) = -(zFar + zNear) / (zFar - zNear);
+    projection(2, 3) = -2 * zFar * zNear / (zFar - zNear);
+    projection(3, 2) = -1;
+
+
     Eigen::Matrix4f mirror;
-    mirror <<
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, -1, 0,
-        0, 0, 0, 1;
-
-    projection = mirror * perspective * projection;
+    mirror << 1, 0, 0, 0,
+              0, 1, 0, 0,
+              0, 0, -1, 0,
+              0, 0, 0, 1;
 
     return projection;
 }
@@ -45,23 +57,51 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
     return view;
 }
 
+
+
 int main()
 {
+    using Clock = std::chrono::high_resolution_clock;
     std::string TexturePath1 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/spot/spot_texture.png";
     std::string ModelPath1 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/spot/spot_triangulated_good.obj";
+    std::string ModelPath3 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/rock/rock.obj";
+    std::string TexturePath3 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/rock/rock.png";
     Model model1;
     Texture texture1(TexturePath1);
     model1.LoadModel(ModelPath1);
     model1.SetTexture(texture1);
     model1.SetRotation(Eigen::Vector3f(0.f, 1.f, 0.f),30);
-    model1.SetPosition(0, 0, 5.f);
+    model1.SetPosition(0, 0, 0.f);
     model1.SetScale(Eigen::Vector3f(5, 5, 5));
     model1.GetModelMatrix();
+
+
+
+    Model model3;
+    Texture texture3(TexturePath3);
+    model3.LoadModel(ModelPath3);
+    model3.SetTexture(texture3);
+    model3.SetRotation(Eigen::Vector3f(0.f, 1.f, 0.f),30);
+    model3.SetPosition(-10.f, -10.f, 1.f);
+    model3.SetScale(Eigen::Vector3f(4, 4, 4));
+    model3.GetModelMatrix();
+
+    Model model4;
+    Texture texture4(TexturePath3);
+    model4.LoadModel(ModelPath3);
+    model4.SetTexture(texture3);
+    model4.SetRotation(Eigen::Vector3f(0.f, 1.f, 0.f),30);
+    model4.SetPosition(10.f, -10.f, 1.f);
+    model4.SetScale(Eigen::Vector3f(4, 4, 4));
+    model4.GetModelMatrix();
+
     std::vector<Model> models;
     models.push_back(model1);
+    models.push_back(model3);
+    models.push_back(model4);
     //模型信息初始化
 
-    Eigen::Vector3f eye_pos(0, 0, 25);
+    Eigen::Vector3f eye_pos(0, 0, 0);
     Shader shader;
 
     Light asLight;
@@ -74,20 +114,36 @@ int main()
     shader.SetLight(asLight);
     //着色器初始化
 
+    Camera camera(eye_pos, -90, 0);
+    std::cout << camera.get_view_matrix() << std::endl;
+
+
     rasterizer rst(700,700);
     rst.SetModels(models);
     rst.SetProjection(get_projection_matrix(45.0, 1, 0.1, 80));
     rst.SetFragmentShader(shader);
-    rst.SetView(get_view_matrix(eye_pos));
+    // rst.SetView(get_view_matrix(eye_pos));
+    rst.SetView(camera.get_view_matrix());
     //渲染器初始化
+
+    auto lastFrame = Clock::now();
+    float deltaTime = 0.0f;
+    //这里是为了计算帧时间
 
     int key = 0;
     std::string filename = "test.jpg";
     while(key != 27)
     {
+        auto currentFrame = Clock::now();
+
+        // 计算 deltaTime，以秒为单位
+        std::chrono::duration<float> deltaTimeDuration = currentFrame - lastFrame;
+        deltaTime = deltaTimeDuration.count();
+
+
         rst.ClearColorBuffer();
         rst.ClearDepthBuffer();
-
+        rst.SetView(camera.get_view_matrix());
         rst.SetProjection(get_projection_matrix(45.0, 1, 0.1, 80));
 
         //r.draw(pos_id, ind_id, col_id, rst::Primitive::Triangle);
@@ -98,7 +154,26 @@ int main()
 
         cv::imshow("image", image);
         cv::imwrite(filename, image);
-        key = cv::waitKey(10);
+        key = cv::waitKey(1);
+
+        if (key == 'w')
+            camera.Move(deltaTime, 0);
+        if (key == 's')
+            camera.Move(deltaTime, 1);
+        if (key == 'a')
+            camera.Move(deltaTime, 2);
+        if (key == 'd')
+            camera.Move(deltaTime, 3);
+        if (key == 'l')
+            camera.ChangePitch(deltaTime,2);
+        if (key == 'j')
+            camera.ChangePitch(deltaTime,3);
+        if (key == 'k')
+            camera.ChangePitch(deltaTime,1);
+        if (key == 'i')
+            camera.ChangePitch(deltaTime,0);
+
+        lastFrame = currentFrame;
 
     }
 

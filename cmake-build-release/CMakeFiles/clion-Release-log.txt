@@ -1,0 +1,4 @@
+/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/aarch64/ninja -G Ninja -S /Users/yunicai/Code_file/code/computer_graphic_homework/Raster -B /Users/yunicai/Code_file/code/computer_graphic_homework/Raster/cmake-build-release
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/yunicai/Code_file/code/computer_graphic_homework/Raster/cmake-build-release
