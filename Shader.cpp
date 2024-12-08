@@ -35,7 +35,7 @@ void Shader::SetEyePos(const Eigen::Vector3f &eyePos) {
 
 
 Eigen::Vector3f Shader::UsingShader(const fragment_shader_payload &fragment) {
-    Eigen::Vector3f return_color = {0.5, 0.5, 0.5};
+    Eigen::Vector3f return_color = {0.9, 0.9, 0.9};
     if (fragment.texture)
     {
         float u = std::clamp(static_cast<double>(fragment.texCoord(0)),0.0,1.0);
@@ -83,7 +83,7 @@ Eigen::Vector3f Shader::UsingShader(const fragment_shader_payload &fragment) {
 }
 
 Eigen::Vector3f Shader::UsingShadowShader(const fragment_shader_payload &fragment, const std::vector<float> &shadowMap,
-    const Eigen::Matrix4f &lightMVP) {
+    const Eigen::Matrix4f &lightVP, const Eigen::Matrix4f &modelMatrix) {
     Eigen::Vector3f return_color = {0.5, 0.5, 0.5};
     if (fragment.texture)
     {
@@ -101,7 +101,7 @@ Eigen::Vector3f Shader::UsingShadowShader(const fragment_shader_payload &fragmen
     float p = Gloss;
 
     Eigen::Vector3f point = fragment.world_pos;
-    Eigen::Vector4f lightSpacePoint = lightMVP * Eigen::Vector4f(point.x(), point.y(), point.z(), 1.0);
+    Eigen::Vector4f lightSpacePoint = lightVP* modelMatrix * Eigen::Vector4f(point.x(), point.y(), point.z(), 1.0);
     int lightSpaceX = 350 * (lightSpacePoint.x() / lightSpacePoint.w() + 1.0f);
     int lightSpaceY = 350 * (lightSpacePoint.y() / lightSpacePoint.w() + 1.0f);
     float distance = (point - lights[0].position).norm();

@@ -217,7 +217,10 @@ void rasterizer::Draw() {
     for (auto& model : models) {
         for (const auto& t : model.triangleList) {
             Triangle newTriangle = *t;
-            texture = &model.texture;
+            if(model.modelFlag == 1)
+                texture = &model.texture;
+            else
+                texture = nullptr;
             Eigen::Matrix4f mvp = Eigen::Matrix4f::Identity();
             Eigen::Matrix4f inv_trans = ( model.modelMatrix).inverse().transpose();
             mvp = Eigen::Matrix4f(projection * view * model.modelMatrix);

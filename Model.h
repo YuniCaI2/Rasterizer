@@ -30,6 +30,8 @@ public:
     void SetTexture(const Texture& texture);
     Eigen::Matrix4f GetModelMatrix();
 
+    int modelFlag;
+
 
 };
 

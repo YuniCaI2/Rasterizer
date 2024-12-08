@@ -7,6 +7,7 @@ Model::Model() {
     rotationAngle = 0.f;
     rotationAxis << 0.f , 1.f, 0.f;
     scale << 1.f , 1.f , 1.f;
+    modelFlag = 0;
 }
 
 void Model::LoadModel(std::string path) {
@@ -49,6 +50,7 @@ void Model::SetScale(Eigen::Vector3f scale) {
 
 void Model::SetTexture(const Texture &texture) {
     this->texture = texture;
+    modelFlag = 1 ;
 }
 
 Eigen::Matrix4f Model::GetModelMatrix() {

@@ -57,6 +57,30 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
     return view;
 }
 
+Eigen::Matrix4f look_at(const Eigen::Vector3f& eye,
+                const Eigen::Vector3f& center,
+                const Eigen::Vector3f& up_vector)
+{
+    Eigen::Vector3f f = (center - eye).normalized();
+    Eigen::Vector3f s = f.cross(up_vector).normalized();
+    Eigen::Vector3f u = s.cross(f).normalized();
+
+    Eigen::Matrix4f mat = Eigen::Matrix4f::Identity();
+    mat(0, 0) = s.x();
+    mat(0, 1) = s.y();
+    mat(0, 2) = s.z();
+    mat(1, 0) = u.x();
+    mat(1, 1) = u.y();
+    mat(1, 2) = u.z();
+    mat(2, 0) = -f.x();
+    mat(2, 1) = -f.y();
+    mat(2, 2) = -f.z();
+    mat(0, 3) = -s.dot(eye);
+    mat(1, 3) = -u.dot(eye);
+    mat(2, 3) = f.dot(eye);
+
+    return mat;
+}
 
 
 int main()
@@ -64,8 +88,10 @@ int main()
     using Clock = std::chrono::high_resolution_clock;
     std::string TexturePath1 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/spot/spot_texture.png";
     std::string ModelPath1 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/spot/spot_triangulated_good.obj";
+    std::string ModelPath2 = "/Users/yunicai/Code_file/code/computer_graphic_homework/Raster/Model/flat.obj";
     std::string ModelPath3 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/rock/rock.obj";
     std::string TexturePath3 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/rock/rock.png";
+    std::string TexturePath2 = "/Users/yunicai/Code_file/code/computer_graphic_homework/Raster/image/img.png";
     Model model1;
     Texture texture1(TexturePath1);
     model1.LoadModel(ModelPath1);
@@ -74,7 +100,6 @@ int main()
     model1.SetPosition(0, 0, 0.f);
     model1.SetScale(Eigen::Vector3f(5, 5, 5));
     model1.GetModelMatrix();
-
 
 
     Model model3;
@@ -86,6 +111,16 @@ int main()
     model3.SetScale(Eigen::Vector3f(4, 4, 4));
     model3.GetModelMatrix();
 
+    Model model2;
+    Texture texture2(TexturePath2);
+    model2.LoadModel(ModelPath2);
+    // model2.SetTexture(texture3);
+    model2.SetRotation(Eigen::Vector3f(0.f, 1.f, 0.f),0);
+    model2.SetScale(Eigen::Vector3f(20, 20, 20));
+    model2.SetPosition(-10.f, -12.f, 1.f);
+    model2.SetTexture(texture2);
+    model2.GetModelMatrix();
+
     Model model4;
     Texture texture4(TexturePath3);
     model4.LoadModel(ModelPath3);
@@ -95,10 +130,28 @@ int main()
     model4.SetScale(Eigen::Vector3f(4, 4, 4));
     model4.GetModelMatrix();
 
+    Model model5;
+    model5.LoadModel(ModelPath3);
+    model5.SetTexture(texture3);
+    model5.SetRotation(Eigen::Vector3f(0.f, 1.f, 0.f),30);
+    model5.SetPosition(0.f, -10.f, 5.f);
+    model5.SetScale(Eigen::Vector3f(4, 4, 4));
+    model5.GetModelMatrix();
+
+    Model model6;
+    model6.LoadModel(ModelPath3);
+    model6.SetTexture(texture3);
+    model6.SetRotation(Eigen::Vector3f(0.f, 1.f, 0.f),30);
+    model6.SetPosition(0.f, -10.f, -10.f);
+    model6.SetScale(Eigen::Vector3f(4, 4, 4));
+    model6.GetModelMatrix();
+
     std::vector<Model> models;
     models.push_back(model1);
     models.push_back(model3);
     models.push_back(model4);
+    models.push_back(model5);
+    models.push_back(model6);
     //模型信息初始化
 
     Eigen::Vector3f eye_pos(0, 0, 0);
@@ -108,11 +161,31 @@ int main()
     asLight.intensity << 0.6,0.6,0.6;
     asLight.position << -20, 10 ,0 ;
     Light light;
-    light.intensity << 1.5 ,1.5 ,1.5;
+    light.intensity << 3 ,3 ,3;
     light.position << 20, 20,0;
     shader.SetLight(light);
     shader.SetLight(asLight);
     //着色器初始化
+
+    Eigen::Matrix4f lightView = look_at(light.position,Eigen::Vector3f(0.f,0.f,0.f),Eigen::Vector3f(0.f,1.f,0.f));
+    Eigen::Matrix4f lightProj = get_projection_matrix(45,1,0.1,80);
+    Eigen::Matrix4f lightViewProj =  lightProj * lightView ;
+    rasterizer shadowRst(700,700);
+    shadowRst.SetModels(models);
+    shadowRst.SetView(lightView);
+    shadowRst.SetProjection(lightProj);
+    shadowRst.SetFragmentShader(shader);
+    shadowRst.ClearColorBuffer();
+    shadowRst.ClearDepthBuffer();
+    shadowRst.Draw();
+    // cv::Mat simage(700, 700, CV_32FC3, shadowRst.frame_buffer().data());
+    // simage.convertTo(simage, CV_8UC3, 1.0f);
+    // cv::cvtColor(simage, simage, cv::COLOR_RGB2BGR);
+    // cv::imwrite("shadow.jpg", simage);
+
+
+
+    //光源视角
 
     Camera camera(eye_pos, -90, 0);
     std::cout << camera.get_view_matrix() << std::endl;
@@ -122,8 +195,11 @@ int main()
     rst.SetModels(models);
     rst.SetProjection(get_projection_matrix(45.0, 1, 0.1, 80));
     rst.SetFragmentShader(shader);
-    // rst.SetView(get_view_matrix(eye_pos));
-    rst.SetView(camera.get_view_matrix());
+    rst.SetView(get_view_matrix(eye_pos));
+    rst.Draw();
+
+
+    // rst.SetView(lightView );
     //渲染器初始化
 
     auto lastFrame = Clock::now();
