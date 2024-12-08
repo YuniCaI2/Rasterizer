@@ -6,12 +6,7 @@
 
 Texture::Texture(const std::string &path) {
     image = cv::imread(path);
-    if (image.empty()) {
-        throw std::runtime_error("Failed to load texture image from path: " + path);
-    }
-    // 转换为浮点型（范围 0-1）
-    image.convertTo(image, CV_32FC3, 1.0 / 255.0);
-    cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+    cv::cvtColor(image, image, cv::COLOR_RGB2BGR);
     w = image.cols;
     h = image.rows;
 }

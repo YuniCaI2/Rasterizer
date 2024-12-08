@@ -3,12 +3,17 @@
 //
 #include "Model.h"
 
+Model::Model() {
+    rotationAngle = 0.f;
+    rotationAxis << 0.f , 1.f, 0.f;
+    scale << 1.f , 1.f , 1.f;
+}
+
 void Model::LoadModel(std::string path) {
     loader.LoadFile(path);
     for (auto mesh : loader.LoadedMeshes) {
         for (int i = 0; i < mesh.Vertices.size(); i += 3) {
-            // 使用 std::make_unique 创建 Triangle 对象
-            auto t = std::make_unique<Triangle>();
+            auto t = new Triangle;
             for (int j = 0; j < 3; j++) {
                 t->setVertex(j, Eigen::Vector4f(mesh.Vertices[i + j].Position.X,
                                                 mesh.Vertices[i + j].Position.Y,
@@ -18,9 +23,12 @@ void Model::LoadModel(std::string path) {
                                                 mesh.Vertices[i + j].Normal.Z));
                 t->setTexCoord(j, Eigen::Vector2f(mesh.Vertices[i + j].TextureCoordinate.X,
                                                   mesh.Vertices[i + j].TextureCoordinate.Y));
+
+                // std::cout << "Triangle: " << i << std::endl;
+                // std::cout << t->vertex[j] << std::endl;
             }
-            // 使用 std::move 将 t 转移到 triangleList
-            triangleList.push_back(std::move(t));
+
+            triangleList.push_back(t);
         }
     }
 }
@@ -36,7 +44,7 @@ void Model::SetRotation(Eigen::Vector3f rotation, float angle) {
 
 
 void Model::SetScale(Eigen::Vector3f scale) {
-    scale << scale[0], scale[1], scale[2];
+    this->scale << scale[0], scale[1], scale[2];
 }
 
 void Model::SetTexture(const Texture &texture) {
@@ -54,6 +62,7 @@ Eigen::Matrix4f Model::GetModelMatrix() {
     translationMatrix(2, 3) = position.z();
 
     // 计算旋转矩阵
+    rotationAngle = rotationAngle * M_PI / 180.0f;
     Eigen::AngleAxisf angleAxis(rotationAngle, rotationAxis.normalized());
     rotationMatrix.block<3, 3>(0, 0) = angleAxis.toRotationMatrix();
 

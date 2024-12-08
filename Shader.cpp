@@ -14,8 +14,11 @@ Shader::Shader() {
 }
 
 void Shader::SetLight(const Light &light) {
-    this->light.position = light.position;
-    this->light.intensity = light.intensity;
+    lights.push_back(light);
+}
+
+Eigen::Vector3f Shader::GetLightPos() {
+    return Eigen::Vector3f(light.position.x(), light.position.y(), light.position.z());
 }
 
 void Shader::SetLightPos(const Eigen::Vector3f &lightPos) {
@@ -30,9 +33,6 @@ void Shader::SetEyePos(const Eigen::Vector3f &eyePos) {
     this->eyePos = eyePos;
 }
 
-Eigen::Vector3f Shader::GetLightPos() {
-    return Eigen::Vector3f(light.position.x(), light.position.y(), light.position.z());
-}
 
 Eigen::Vector3f Shader::UsingShader(const fragment_shader_payload &fragment) {
     Eigen::Vector3f return_color = {0.5, 0.5, 0.5};
@@ -40,7 +40,7 @@ Eigen::Vector3f Shader::UsingShader(const fragment_shader_payload &fragment) {
     {
         float u = std::clamp(static_cast<double>(fragment.texCoord(0)),0.0,1.0);
         float v = std::clamp(static_cast<double>(fragment.texCoord(1)),0.0,1.0);
-        return_color = fragment.texture->getColor(u,v);
+        return_color = fragment.texture->getColorBilinear(u,v);
     }
     Eigen::Vector3f texture_color;
     texture_color << return_color.x(), return_color.y(), return_color.z();
@@ -51,30 +51,32 @@ Eigen::Vector3f Shader::UsingShader(const fragment_shader_payload &fragment) {
 
     float p = Gloss;
 
-    Eigen::Vector3f point = fragment.view_pos;
+    Eigen::Vector3f point = fragment.world_pos;
     Eigen::Vector3f normal = fragment.normal;
 
     Eigen::Vector3f result_color = {0, 0, 0};
 
 
 
+    for (auto& light : lights) {
         // components are. Then, accumulate that result on the *result_color* object.
         // Light Direction
-    Eigen::Vector3f light_dir = (light.position - point).normalized();
+        Eigen::Vector3f light_dir = (light.position - point).normalized();
         // View Direction
-    Eigen::Vector3f view_dir = (eye_pos - point).normalized();
+        Eigen::Vector3f view_dir = (eye_pos - point).normalized();
         // Half Vector
-    Eigen::Vector3f h = (light_dir + view_dir).normalized();
+        Eigen::Vector3f h = (light_dir + view_dir).normalized();
         // Light Attenuation
-    Eigen::Vector3f attenuated_light = light.intensity / ((light.position - point).norm() * (light.position - point).norm() + 1e-4);
+        Eigen::Vector3f attenuated_light = light.intensity / ((light.position - point).norm() * (light.position - point).norm() + 1e-4);
         // Ambient
-    Eigen::Vector3f ambient = ka.cwiseProduct(amb_light_intensity);
+        Eigen::Vector3f ambient = ka.cwiseProduct(amb_light_intensity);
         // Diffuse
-    Eigen::Vector3f diffuse = kd.cwiseProduct(attenuated_light) * std::max(0.0f,normal.dot(light_dir));
+        Eigen::Vector3f diffuse = kd.cwiseProduct(attenuated_light) * std::max(0.0f,normal.dot(light_dir));
         // Specular
-    Eigen::Vector3f specular = ks.cwiseProduct(attenuated_light) * std::pow(std::max(0.0f,normal.dot(h)),p);
+        Eigen::Vector3f specular = ks.cwiseProduct(attenuated_light) * std::pow(std::max(0.0f,normal.dot(h)),p);
 
-    result_color += (diffuse + ambient + specular);
+        result_color += (diffuse + ambient + specular);
+    }
 
 
     return result_color * 255.f;

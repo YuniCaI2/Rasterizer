@@ -17,7 +17,7 @@ struct fragment_shader_payload
          color(col), normal(nor), texCoord(tc), texture(tex) {}
 
 
-    Eigen::Vector3f view_pos;
+    Eigen::Vector3f world_pos;
     Eigen::Vector3f color;
     Eigen::Vector3f normal;
     Eigen::Vector2f texCoord;

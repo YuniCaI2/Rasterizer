@@ -4,7 +4,7 @@
 
 #ifndef TEXTURE_H
 #define TEXTURE_H
-#include <Eigen/src/Core/Matrix.h>
+#include<Eigen/Dense>
 #include<opencv2/opencv.hpp>
 
 
@@ -14,6 +14,7 @@ public:
     int w,h;
 
     Texture(const std::string& path);
+    Texture(){};
 
     Eigen::Vector3f getColor(float u, float v);
 

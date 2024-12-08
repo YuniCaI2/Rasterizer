@@ -25,4 +25,4 @@ add_executable(Raster main.cpp
         Fragment.h)
 
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})

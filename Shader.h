@@ -4,7 +4,6 @@
 
 #ifndef SHADER_H
 #define SHADER_H
-#include <Eigen/src/Core/Matrix.h>
 #include "Fragment.h"
 struct Light {
     Eigen::Vector3f position;
@@ -19,6 +18,7 @@ public:
     Eigen::Vector3f ks;
     Eigen::Vector3f eyePos;
     float Gloss;
+    std::vector<Light> lights;
 
 
     Shader();

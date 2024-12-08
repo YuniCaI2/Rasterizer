@@ -5,7 +5,6 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 #include <Eigen/Dense>
-#include <Eigen/Geometry>
 
 #include "Texture.h"
 
@@ -28,8 +27,8 @@ public:
     Eigen::Vector4f b();
     Eigen::Vector4f c();
 
-    void setVertex(int ind, Eigen::Vector4f ver);
-    void setNormal(int ind, Eigen::Vector3f n);
+    void setVertex(int ind,const Eigen::Vector4f& ver);
+    void setNormal(int ind,const Eigen::Vector3f& n);
     void setColor(int ind, float r, float g, float b);
 
     void setNormals(const std::array<Eigen::Vector3f, 3>& normals);
@@ -38,7 +37,7 @@ public:
     void setTexCoords(const std::array<Eigen::Vector2f, 3>& tex);
     void setVertexs(const std::array<Eigen::Vector4f, 3>& vertexs);
 
-    Eigen::Vector4f toVector4();
+    // Eigen::Vector4f toVector4();
 
 };
 

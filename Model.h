@@ -4,14 +4,16 @@
 
 #ifndef MODEL_H
 #define MODEL_H
+
 #include "OBJ_Loader.h"
 #include "Triangle.h"
 
 
 class Model {
 public:
+    Model();
     objl::Loader loader;
-    std::vector<std::unique_ptr<Triangle>> triangleList;
+    std::vector<Triangle*> triangleList;
     Texture texture;
 
     Eigen::Vector3f position;

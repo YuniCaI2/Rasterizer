@@ -30,11 +30,12 @@ Eigen::Vector4f Triangle::c() {
     return vertex[2];
 }
 
-void Triangle::setVertex(int ind, Eigen::Vector4f ver) {
+void Triangle::setVertex(int ind, const Eigen::Vector4f& ver) {
     vertex[ind] = ver;
+    // std::cout << ver << std::endl;
 }
 
-void Triangle::setNormal(int ind, Eigen::Vector3f n) {
+void Triangle::setNormal(int ind,const Eigen::Vector3f& n) {
     normal[ind] = n;
 }
 
@@ -70,7 +71,3 @@ void Triangle::setVertexs(const std::array<Eigen::Vector4f, 3> &vertexs) {
     vertex[2] = vertexs[0];
 }
 
-Eigen::Vector4f Triangle::toVector4() {
-    Eigen::Vector4f res;
-    std::transform(vertex[0].begin(), vertex[0].end(), res.begin(), [](auto& v) {return Eigen::Vector4f(v.x, v.y, 1.0);});
-}
