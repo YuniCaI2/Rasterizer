@@ -83,7 +83,7 @@ Eigen::Vector3f Shader::UsingShader(const fragment_shader_payload &fragment) {
 }
 
 Eigen::Vector3f Shader::UsingShadowShader(const fragment_shader_payload &fragment, const std::vector<float> &shadowMap,
-    const Eigen::Matrix4f &lightVP, const Eigen::Matrix4f &modelMatrix) {
+    const Eigen::Matrix4f &lightVP) {
     Eigen::Vector3f return_color = {0.5, 0.5, 0.5};
     if (fragment.texture)
     {
@@ -101,11 +101,15 @@ Eigen::Vector3f Shader::UsingShadowShader(const fragment_shader_payload &fragmen
     float p = Gloss;
 
     Eigen::Vector3f point = fragment.world_pos;
-    Eigen::Vector4f lightSpacePoint = lightVP* modelMatrix * Eigen::Vector4f(point.x(), point.y(), point.z(), 1.0);
-    int lightSpaceX = 350 * (lightSpacePoint.x() / lightSpacePoint.w() + 1.0f);
-    int lightSpaceY = 350 * (lightSpacePoint.y() / lightSpacePoint.w() + 1.0f);
-    float distance = (point - lights[0].position).norm();
-    bool vis = shadowMap[(700 - 1 - lightSpaceY) * 700 + lightSpaceX] + 1e-2 > distance;
+    Eigen::Vector4f lightSpacePoint = lightVP * Eigen::Vector4f(point.x(), point.y(), point.z(), 1.0);
+    int lightSpaceX = std::clamp(350 * (lightSpacePoint.x() / lightSpacePoint.w() + 1.0f), 0.0f, 699.0f);
+    int lightSpaceY = std::clamp(350 * (lightSpacePoint.y() / lightSpacePoint.w() + 1.0f), 0.0f, 699.0f);
+
+    float f1 = (80 - 0.1) / 2.0;
+    float f2 = (80 + 0.1) / 2.0;
+    float distance = lightSpacePoint.z() / lightSpacePoint.w();
+    distance = distance * f1 + f2;
+    bool vis = shadowMap[(700 - 1 - lightSpaceY) * 700 + lightSpaceX] + 1e-3 >= distance;
     Eigen::Vector3f normal = fragment.normal;
 
     Eigen::Vector3f result_color = {0, 0, 0};

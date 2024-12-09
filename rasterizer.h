@@ -57,6 +57,9 @@ public:
     int GetIndex(int x ,int y);
     void SetPixel(const Eigen::Vector2i& point, const Eigen::Vector3f& color);
     std::vector<Eigen::Vector3f>& frame_buffer() { return frameBuf; }
+    std::vector<float>& depth_buffer() { return depthBuf; }
+    void DrawWithShadow(const Eigen::Matrix4f& lightVP, const std::vector<float> &shadowMap);
+    void RasterizeTriangleWithShadow(const Triangle &t, const std::array<Eigen::Vector3f, 3> &worldPos, const Eigen::Matrix4f& lightVP, const std::vector<float> &shadowMap,const Eigen::Matrix4f &modelMatrix );
 };
 
 

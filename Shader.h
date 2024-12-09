@@ -28,7 +28,7 @@ public:
     void SetEyePos(const Eigen::Vector3f& eyePos);
     Eigen::Vector3f GetLightPos();
     Eigen::Vector3f UsingShader(const fragment_shader_payload& fragment);
-    Eigen::Vector3f UsingShadowShader(const fragment_shader_payload& fragment ,  const std::vector<float>& shadowMap, const Eigen::Matrix4f& lightMVP, const Eigen::Matrix4f& modelMatrix);
+    Eigen::Vector3f UsingShadowShader(const fragment_shader_payload& fragment ,  const std::vector<float>& shadowMap, const Eigen::Matrix4f& lightMVP);
 };
 
 

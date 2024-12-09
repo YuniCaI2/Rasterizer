@@ -289,6 +289,85 @@ void rasterizer::Draw() {
     }
 }
 
+void rasterizer::DrawWithShadow(const Eigen::Matrix4f& lightVP, const std::vector<float> &shadowMap) {
+    float f1 = (80 - 0.1) / 2.0;
+    float f2 = (80 + 0.1) / 2.0;
+
+    for (auto& model : models) {
+        for (const auto& t : model.triangleList) {
+            Triangle newTriangle = *t;
+            if(model.modelFlag == 1)
+                texture = &model.texture;
+            else
+                texture = nullptr;
+            Eigen::Matrix4f mvp = Eigen::Matrix4f::Identity();
+            Eigen::Matrix4f inv_trans = ( model.modelMatrix).inverse().transpose();
+            mvp = Eigen::Matrix4f(projection * view * model.modelMatrix);
+            // std::cout << "m:" << std::endl;
+            // std::cout << model.modelMatrix << std::endl;
+            // std::cout << "v" << std::endl;
+            // std::cout << view << std::endl;
+            // std::cout << "p" << std::endl;
+            // std::cout << projection << std::endl;
+
+
+            std::vector<Eigen::Vector4f> tW{
+                Eigen::Vector4f(model.modelMatrix * t->vertex[0]),//世界坐标提供着色
+                Eigen::Vector4f(model.modelMatrix * t->vertex[1]),
+                Eigen::Vector4f(model.modelMatrix * t->vertex[2])
+            };
+            std::vector<Eigen::Vector3f> worldPos(tW.size());
+            std::transform(tW.begin(), tW.end(), worldPos.begin(), [](const Eigen::Vector4f& v) {
+                return v.head<3>();
+            });
+            // std::cout << "Triangle:" << std::endl;
+            // std::cout << newTriangle.vertex[0] << " " << newTriangle.vertex[1] << " " << newTriangle.vertex[2] << std::endl;
+            for (auto& v : newTriangle.vertex) {
+                v = mvp * v;
+            }
+            // std::cout << "MVP:" << std::endl;
+            // std::cout << mvp << std::endl;
+
+            for (auto& v : newTriangle.normal) {//法线变换
+                Eigen::Vector4f t_v = Eigen::Vector4f(v[0], v[1], v[2], 1);
+                v = (inv_trans * t_v).head<3>();
+            }
+            // std::cout << "Triangles:" << newTriangle.vertex[0] << "," << newTriangle.vertex[1] << "," << newTriangle.vertex[2] << newTriangle.vertex[3] <<std::endl;
+            std::vector<Triangle> triangles = SutherlandHodgeman(newTriangle,worldPos);
+            // std::vector<Triangle> triangles;
+            // triangles.push_back(newTriangle);
+            for (auto& triangle : triangles) {
+                for (auto& v : triangle.vertex) {
+                    v = v / v.w();
+                }//齐次
+            }
+            // // std::cout<< "Triangle is :" << triangles[0].vertex[0] << std::endl;
+            // for (auto& triangle : triangles) {
+            //     for (auto& v : triangle.vertex) {
+            //         if ( v.z() < -1 || v.z() > 1 || v.y() < -1 || v.y() > 1 || v.x() < -1 || v.x() > 1) {
+            //             // std::cout << v.x() << " " << v.y() << " " << v.z() << std::endl;
+            //             triangles.clear();
+            //         }
+            //     }
+            // }
+            //暴力裁剪
+            // std::cout << "Triangles: " << triangles.size() << std::endl;
+            for (int i = 0; i < triangles.size(); i++) {
+                for (int j = 0; j < 3; j++) {
+                    triangles[i].vertex[j].x() = 0.5f * w * (triangles[i].vertex[j].x() + 1.0f);
+                    triangles[i].vertex[j].y() = 0.5f * h * (1.0f + triangles[i].vertex[j].y());
+                    // triangles[i].vertex[j].z() = triangles[i].vertex[j].z() * f1 + f2;
+                    // std::cout << "Z:" << triangles[i].vertex[j].z() << std::endl;
+                }
+                std::array<Eigen::Vector3f, 3> _worldPos{worldPos[i*3],worldPos[i*3+1],worldPos[i*3+2]};
+
+                RasterizeTriangleWithShadow(triangles[i],_worldPos,lightVP,shadowMap,model.modelMatrix);
+            }
+
+        }
+    }
+}
+
 void rasterizer::RasterizeTriangle(const Triangle &t, const std::array<Eigen::Vector3f, 3> &worldPos) {
     std::array<Eigen::Vector4f, 3> v{t.vertex[0], t.vertex[1], t.vertex[2]};
 
@@ -325,6 +404,53 @@ void rasterizer::RasterizeTriangle(const Triangle &t, const std::array<Eigen::Ve
                     fragment_shader_payload payload(interpolated_color, interpolated_normal.normalized(), interpolated_texcoords, texture ? &*texture : nullptr);
                     payload.world_pos = interpolated_shadingcoords;
                     auto pixel_color = fragmentShader.UsingShader(payload);
+                    // std::cout << pixel_color << std::endl;
+                    SetPixel(Eigen::Vector2i(i, j), pixel_color);
+                }
+
+            }
+
+        }
+    }
+
+}
+
+void rasterizer::RasterizeTriangleWithShadow(const Triangle &t, const std::array<Eigen::Vector3f, 3> &worldPos, const Eigen::Matrix4f& lightVP, const std::vector<float> &shadowMap, const Eigen::Matrix4f &modelMatrix ) {
+    std::array<Eigen::Vector4f, 3> v{t.vertex[0], t.vertex[1], t.vertex[2]};
+
+    float max_x, min_x, max_y, min_y;
+
+    max_x = v[0].x() > v[1].x() ? v[0].x() : v[1].x();
+    max_x = max_x > v[2].x() ? max_x : v[2].x();
+
+    min_x = v[0].x() < v[1].x() ? v[0].x() : v[1].x();
+    min_x = min_x < v[2].x() ? min_x : v[2].x();
+
+    max_y = v[0].y() > v[1].y() ? v[0].y() : v[1].y();
+    max_y = max_y > v[2].y() ? max_y : v[2].y();
+
+    min_y = v[0].y() < v[1].y() ? v[0].y() : v[1].y();
+    min_y = min_y < v[2].y() ? min_y : v[2].y();
+
+     // std::cout << "Triangle: " << min_y << " "<< max_x << std::endl;
+    for (int i = min_x; i < max_x; i++) {
+        for (int j = min_y; j < max_y; j++) {
+            // std::cout << t.vertex[i].z() << std::endl;
+            if (InsideTriangle(i, j, t.vertex) == true) {
+                auto [alpha, beta, gamma] = computeBarycentric2D(i, j, t.vertex);
+                float Z = 1.0 / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+                float zp = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+                zp *= Z;
+                int index = GetIndex(i, j);
+                if (zp <= this->depthBuf[index]) {
+                    auto interpolated_color = interpolate(alpha, beta, gamma, t.color[0], t.color[1], t.color[2], 1); //interpolate color
+                    auto interpolated_normal = interpolate(alpha, beta, gamma, t.normal[0], t.normal[1], t.normal[2], 1); //interpolate normal
+                    auto interpolated_texcoords = interpolate(alpha, beta, gamma, t.tex[0], t.tex[1], t.tex[2], 1); //interpolate texture
+                    auto interpolated_shadingcoords = interpolate(alpha, beta, gamma, worldPos[0], worldPos[1], worldPos[2], 1); //interpolate viewpos
+                    this->depthBuf[index] = zp; //update zbuffer
+                    fragment_shader_payload payload(interpolated_color, interpolated_normal.normalized(), interpolated_texcoords, texture ? &*texture : nullptr);
+                    payload.world_pos = interpolated_shadingcoords;
+                    auto pixel_color = fragmentShader.UsingShadowShader(payload,shadowMap,lightVP);
                     // std::cout << pixel_color << std::endl;
                     SetPixel(Eigen::Vector2i(i, j), pixel_color);
                 }

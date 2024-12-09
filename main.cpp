@@ -154,14 +154,14 @@ int main()
     models.push_back(model6);
     //模型信息初始化
 
-    Eigen::Vector3f eye_pos(0, 0, 0);
+    Eigen::Vector3f eye_pos(0, 0, 20);
     Shader shader;
 
     Light asLight;
     asLight.intensity << 0.6,0.6,0.6;
     asLight.position << -20, 10 ,0 ;
     Light light;
-    light.intensity << 3 ,3 ,3;
+    light.intensity << 4 ,4 ,4;
     light.position << 20, 20,0;
     shader.SetLight(light);
     shader.SetLight(asLight);
@@ -178,10 +178,11 @@ int main()
     shadowRst.ClearColorBuffer();
     shadowRst.ClearDepthBuffer();
     shadowRst.Draw();
-    // cv::Mat simage(700, 700, CV_32FC3, shadowRst.frame_buffer().data());
-    // simage.convertTo(simage, CV_8UC3, 1.0f);
-    // cv::cvtColor(simage, simage, cv::COLOR_RGB2BGR);
-    // cv::imwrite("shadow.jpg", simage);
+    cv::Mat simage(700, 700, CV_32FC3, shadowRst.frame_buffer().data());
+    simage.convertTo(simage, CV_8UC3, 1.f);
+    cv::cvtColor(simage, simage, cv::COLOR_RGB2BGR);
+    cv::imwrite("shadow.png", simage);
+    std::vector<float> shadowMap = shadowRst.depth_buffer();
 
 
 
@@ -196,7 +197,7 @@ int main()
     rst.SetProjection(get_projection_matrix(45.0, 1, 0.1, 80));
     rst.SetFragmentShader(shader);
     rst.SetView(get_view_matrix(eye_pos));
-    rst.Draw();
+    // rst.Draw();
 
 
     // rst.SetView(lightView );
@@ -220,10 +221,12 @@ int main()
         rst.ClearColorBuffer();
         rst.ClearDepthBuffer();
         rst.SetView(camera.get_view_matrix());
+        // rst.SetView(lightView);
         rst.SetProjection(get_projection_matrix(45.0, 1, 0.1, 80));
 
         //r.draw(pos_id, ind_id, col_id, rst::Primitive::Triangle);
-        rst.Draw();
+        rst.DrawWithShadow(lightViewProj, shadowMap);
+        // rst.Draw();
         cv::Mat image(700, 700, CV_32FC3, rst.frame_buffer().data());
         image.convertTo(image, CV_8UC3, 1.0f);
         cv::cvtColor(image, image, cv::COLOR_RGB2BGR);
