@@ -88,7 +88,7 @@ int main()
     using Clock = std::chrono::high_resolution_clock;
     std::string TexturePath1 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/spot/spot_texture.png";
     std::string ModelPath1 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/spot/spot_triangulated_good.obj";
-    std::string ModelPath2 = "/Users/yunicai/Code_file/code/computer_graphic_homework/Raster/Model/flat.obj";
+    std::string ModelPath2 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/bunny/bunny.obj";
     std::string ModelPath3 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/rock/rock.obj";
     std::string TexturePath3 = "/Users/yunicai/Code_file/code/GAMES101-Homework/Assignment3/Assignment3/Code/models/rock/rock.png";
     std::string TexturePath2 = "/Users/yunicai/Code_file/code/computer_graphic_homework/Raster/image/img.png";
@@ -114,10 +114,10 @@ int main()
     Model model2;
     Texture texture2(TexturePath2);
     model2.LoadModel(ModelPath2);
-    // model2.SetTexture(texture3);
-    model2.SetRotation(Eigen::Vector3f(0.f, 1.f, 0.f),0);
+    model2.SetTexture(texture3);
+    model2.SetRotation(Eigen::Vector3f(0.f, -10.f, 0.f),0);
     model2.SetScale(Eigen::Vector3f(20, 20, 20));
-    model2.SetPosition(-10.f, -12.f, 1.f);
+    model2.SetPosition(0.f, -5.f, -5.f);
     model2.SetTexture(texture2);
     model2.GetModelMatrix();
 
@@ -141,13 +141,14 @@ int main()
     Model model6;
     model6.LoadModel(ModelPath3);
     model6.SetTexture(texture3);
-    model6.SetRotation(Eigen::Vector3f(0.f, 1.f, 0.f),30);
+    model6.SetRotation(Eigen::Vector3f(0.f, -5.f, 0.f),30);
     model6.SetPosition(0.f, -10.f, -10.f);
     model6.SetScale(Eigen::Vector3f(4, 4, 4));
     model6.GetModelMatrix();
 
     std::vector<Model> models;
     models.push_back(model1);
+    models.push_back(model2);
     models.push_back(model3);
     models.push_back(model4);
     models.push_back(model5);
