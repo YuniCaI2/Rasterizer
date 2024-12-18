@@ -11,6 +11,14 @@ Texture::Texture(const std::string &path) {
     h = image.rows;
 }
 
+
+void Texture::Load(const std::string &path) {
+    image = cv::imread(path);
+    cv::cvtColor(image, image, cv::COLOR_RGB2BGR);
+    w = image.cols;
+    h = image.rows;
+}
+
 Eigen::Vector3f Texture::getColor(float u, float v) {
     auto u_img = u * w;
     auto v_img = (1 - v) * h;

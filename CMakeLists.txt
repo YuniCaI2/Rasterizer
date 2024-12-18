@@ -22,7 +22,13 @@ add_executable(Raster main.cpp
         rasterizer.h
         Fragment.h
         Camera.cpp
-        Camera.h)
+        Camera.h
+        BVH.cpp
+        BVH.h
+        BoundingBox.cpp
+        BoundingBox.h
+        Ray.cpp
+        Ray.h)
 
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBRARIES})

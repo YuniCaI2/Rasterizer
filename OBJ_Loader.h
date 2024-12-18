@@ -471,7 +471,7 @@ namespace objl
 #ifdef OBJL_CONSOLE_OUTPUT
                 if ((outputIndicator = ((outputIndicator + 1) % outputEveryNth)) == 1)
                 {
-                    if (!meshname.empty())
+                     if (!meshname.empty())
                     {
                         std::cout
                                 << "\r- " << meshname
@@ -479,7 +479,7 @@ namespace objl
                                 << "\t| texcoords > " << TCoords.size()
                                 << "\t| normals > " << Normals.size()
                                 << "\t| triangles > " << (Vertices.size() / 3)
-                                << (!MeshMatNames.empty() ? "\t| material: " + MeshMatNames.back() : "");
+                               << (!MeshMatNames.empty() ? "\t| material: " + MeshMatNames.back() : "");
                     }
                 }
 #endif

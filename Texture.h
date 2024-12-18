@@ -16,6 +16,8 @@ public:
     Texture(const std::string& path);
     Texture(){};
 
+    void Load(const std::string& path);
+
     Eigen::Vector3f getColor(float u, float v);
 
     Eigen::Vector3f getColorBilinear(float u, float v);

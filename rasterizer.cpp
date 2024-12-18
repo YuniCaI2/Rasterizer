@@ -207,7 +207,7 @@ void rasterizer::ClearDepthBuffer() {
 }
 
 void rasterizer::ClearColorBuffer() {
-    std::fill(frameBuf.begin(), frameBuf.end(), Eigen::Vector3f{ 60, 60, 60 });
+    std::fill(frameBuf.begin(), frameBuf.end(), Eigen::Vector3f{ 160, 176, 241 });
 }
 
 void rasterizer::Draw() {
@@ -298,6 +298,8 @@ void rasterizer::DrawWithShadow(const Eigen::Matrix4f& lightVP, const std::vecto
             Triangle newTriangle = *t;
             if(model.modelFlag == 1)
                 texture = &model.texture;
+            else if (t->Tex != nullptr)
+                texture = t->Tex;
             else
                 texture = nullptr;
             Eigen::Matrix4f mvp = Eigen::Matrix4f::Identity();

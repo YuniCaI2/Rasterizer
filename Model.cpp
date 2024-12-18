@@ -2,6 +2,7 @@
 // Created by cai on 24-12-6.
 //
 #include "Model.h"
+#include<unordered_map>
 
 Model::Model() {
     rotationAngle = 0.f;
@@ -13,8 +14,18 @@ Model::Model() {
 void Model::LoadModel(std::string path) {
     loader.LoadFile(path);
     for (auto mesh : loader.LoadedMeshes) {
+        std::string modelPath = "/Users/yunicai/Model/blue-archive-sunohara-kokona/";
+        Texture* teX = new Texture;
+        if(modelFlag == 0 ) {
+            std::string mPath = modelPath + std::string(mesh.MeshMaterial.map_Kd);
+            teX->Load(mPath);
+            std::cout << mPath << std::endl;
+        }
         for (int i = 0; i < mesh.Vertices.size(); i += 3) {
             auto t = new Triangle;
+        if (modelFlag == 0) {
+            t->Tex = teX;
+        }
             for (int j = 0; j < 3; j++) {
                 t->setVertex(j, Eigen::Vector4f(mesh.Vertices[i + j].Position.X,
                                                 mesh.Vertices[i + j].Position.Y,
