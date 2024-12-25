@@ -193,6 +193,23 @@ int main()
     cv::imwrite("shadow.png", simage);
     std::vector<float> shadowMap = shadowRst.depth_buffer();
 
+    Eigen::Matrix4f aslightView = look_at(asLight.position,Eigen::Vector3f(0.f,0.f,0.f),Eigen::Vector3f(0.f,1.f,0.f));
+    Eigen::Matrix4f aslightProj = get_projection_matrix(45,1,0.1,80);
+    Eigen::Matrix4f aslightViewProj =  aslightProj * aslightView ;
+    rasterizer asshadowRst(700,700);
+    asshadowRst.SetModels(models);
+    asshadowRst.SetView(aslightView);
+    asshadowRst.SetProjection(aslightProj);
+    asshadowRst.SetFragmentShader(shader);
+    asshadowRst.ClearColorBuffer();
+    asshadowRst.ClearDepthBuffer();
+    asshadowRst.Draw();
+    cv::Mat assimage(700, 700, CV_32FC3, asshadowRst.frame_buffer().data());
+    assimage.convertTo(simage, CV_8UC3, 1.f);
+    cv::cvtColor(simage, simage, cv::COLOR_RGB2BGR);
+    cv::imwrite("shadow.png", simage);
+    std::vector<float> asshadowMap = asshadowRst.depth_buffer();
+
 
 
     //光源视角
@@ -218,6 +235,7 @@ int main()
 
     int key = 0;
     std::string filename = "test.jpg";
+    int sflag = 1;
     while(key != 27)
     {
         auto currentFrame = Clock::now();
@@ -234,7 +252,11 @@ int main()
         rst.SetProjection(get_projection_matrix(45.0, 1, 0.1, 80));
 
         //r.draw(pos_id, ind_id, col_id, rst::Primitive::Triangle);
-        rst.DrawWithShadow(lightViewProj, shadowMap);
+        if(sflag == 1)
+            rst.DrawWithShadow(lightViewProj, shadowMap);
+        else
+            rst.DrawWithShadow(aslightViewProj, asshadowMap);
+
         // rst.Draw();
         cv::Mat image(700, 700, CV_32FC3, rst.frame_buffer().data());
         image.convertTo(image, CV_8UC3, 1.0f);
@@ -260,6 +282,14 @@ int main()
             camera.ChangePitch(deltaTime,1);
         if (key == 'i')
             camera.ChangePitch(deltaTime,0);
+        if (key == 'o') {
+            sflag = 1;
+            std::cout << "sflag : " << sflag << std::endl;
+        }
+        if (key == 'p') {
+            sflag = 0;
+            std::cout << "sflag : " << sflag << std::endl;
+        }
 
         lastFrame = currentFrame;
 
